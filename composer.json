@@ -1,0 +1,33 @@
+{
+    "name": "skrypt-nl/deltasync-laravel",
+    "description": "Add delta synchronization to your Laravel application",
+    "keywords": [
+        "delta",
+        "incremental",
+        "synchronization",
+        "sync",
+        "laravel"
+    ],
+    "homepage": "https://github.com/skrypt-nl/deltasync-laravel",
+    "type": "library",
+    "license": "MIT",
+    "authors": [
+        {
+            "name": "Rick Tibbe",
+            "homepage": "https://skrypt.nl"
+        }
+    ],
+    "minimum-stability": "dev",
+    "autoload": {
+        "psr-4": {
+            "Skrypt\\DeltaSync\\": "src"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Skrypt\\DeltaSync\\DeltaSync"
+            ]
+        }
+    }
+}
