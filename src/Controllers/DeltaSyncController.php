@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Collection;
 use Skrypt\DeltaSync\Models\ModelEvent;
+use Skrypt\DeltaSync\Traits\HasDeltaSync;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DeltaSyncController extends Controller
@@ -20,7 +21,7 @@ class DeltaSyncController extends Controller
 
     private function getSyncId(): int
     {
-        return ModelEvent::max('id');
+        return ModelEvent::max('id') ?? 0;
     }
 
     private function response(Collection $data): StreamedResponse
@@ -54,10 +55,11 @@ class DeltaSyncController extends Controller
 
         $data = [];
 
-        foreach ($models as $model) {
-            $syncStrategy = $model->getDeltaSyncStrategy();
-            $objects = $syncStrategy->fullSync();
-            $data[$model->getDeltaSyncModelName()] = $objects;
+        foreach ($models as $model => $modelClass) {
+            if (in_array(HasDeltaSync::class, class_uses_recursive($modelClass))) {
+                $syncStrategy = $modelClass->getDeltaSyncStrategy();
+                $data[$model] = $syncStrategy->fullSync();
+            }
         }
 
         return $this->response(collect($data));
@@ -80,10 +82,11 @@ class DeltaSyncController extends Controller
 
         $data = [];
 
-        foreach ($models as $model) {
-            $syncStrategy = $model->getDeltaSyncStrategy();
-            $objects = $syncStrategy->deltaSync($lastSyncId);
-            $data[$model->getDeltaSyncModelName()] = $objects;
+        foreach ($models as $model => $modelClass) {
+            if (in_array(HasDeltaSync::class, class_uses_recursive($modelClass))) {
+                $syncStrategy = $modelClass->getDeltaSyncStrategy();
+                $data[$model] = $syncStrategy->deltaSync($lastSyncId);;
+            }
         }
 
         return $this->response(collect($data));
