@@ -5,7 +5,9 @@ namespace Skrypt\DeltaSync\Strategies;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Skrypt\DeltaSync\Enums\EventTypeEnum;
 use Skrypt\DeltaSync\Interfaces\DeltaSyncInterface;
+use Skrypt\DeltaSync\Models\ModelEvent;
 
 class DeltaSyncStrategy implements DeltaSyncInterface
 {
@@ -16,9 +18,9 @@ class DeltaSyncStrategy implements DeltaSyncInterface
         $this->model = $model;
     }
 
-    public function syncQuery(): Model|Builder
+    public function syncQuery(): Builder
     {
-        return $this->model;
+        return $this->model->query();
     }
 
     public function fullSync(): Collection
@@ -28,6 +30,17 @@ class DeltaSyncStrategy implements DeltaSyncInterface
 
     public function deltaSync($lastSyncId): Collection
     {
-        return $this->syncQuery()->get();
+        $deltaSyncModelName = $this->model->getDeltaSyncModelName();
+
+        $subQuery = str_replace('select *', 'select id', $this->syncQuery()->toSql());
+        $bindings = $this->syncQuery()->getBindings();
+
+        $modelEvents = ModelEvent::where('model_name', $deltaSyncModelName)
+            ->with(['model', 'updates'])
+            ->where('id', '>', $lastSyncId)
+            ->whereRaw("`model_id` IN ($subQuery)", $bindings)
+            ->get();
+
+        return $modelEvents;
     }
 }
