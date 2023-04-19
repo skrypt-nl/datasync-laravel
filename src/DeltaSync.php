@@ -3,6 +3,8 @@
 namespace Skrypt\DeltaSync;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Route;
+use Skrypt\DeltaSync\Controllers\DeltaSyncController;
 
 class DeltaSync extends ServiceProvider
 {
