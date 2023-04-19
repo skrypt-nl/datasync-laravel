@@ -10,7 +10,6 @@ class ModelUpdate extends Model
 
     protected $fillable = [
         'key',
-        'value',
         'model_event_id'
     ];
 }

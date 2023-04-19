@@ -16,8 +16,9 @@ return new class extends Migration
         Schema::create('model_updates', function (Blueprint $table) {
             $table->id();
             $table->string('key');
-            $table->string('value');
             $table->foreignId('model_event_id')->index('model_event_id');
+
+            $table->unique(['key', 'model_event_id']);
         });
     }
 

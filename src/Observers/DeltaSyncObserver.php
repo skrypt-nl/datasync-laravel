@@ -35,7 +35,6 @@ class DeltaSyncObserver
         foreach ($model->getChanges() as $key => $value) {
             ModelUpdate::create([
                 'key' => $key,
-                'value' => $value,
                 'model_event_id' => $modelEvent->id
             ]);
         }
