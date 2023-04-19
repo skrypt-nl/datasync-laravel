@@ -2,10 +2,17 @@
 
 namespace Skrypt\DeltaSync\Traits;
 
-use Skrypt\DeltaSync\Models\DeltaSyncStrategy;
+use Skrypt\DeltaSync\Observers\DeltaSyncObserver;
+use Skrypt\DeltaSync\Strategies\DeltaSyncStrategy;
 
 trait HasDeltaSync {
     protected ?array $deltaSyncFields;
+
+    public static function boot(): void
+    {
+        parent::boot();
+        static::observe(DeltaSyncObserver::class);
+    }
 
     /**
      * Get the DeltaSync access strategy for the model.

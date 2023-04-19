@@ -1,6 +1,6 @@
 <?php
 
-namespace Skrypt\DeltaSync\Models;
+namespace Skrypt\DeltaSync\Strategies;
 
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -16,18 +16,18 @@ class DeltaSyncStrategy implements DeltaSyncInterface
         $this->model = $model;
     }
 
-    public function deltaSyncQuery(): Model|Builder
+    public function syncQuery(): Model|Builder
     {
         return $this->model;
     }
 
-    public function initSync(): Collection
+    public function fullSync(): Collection
     {
-        return $this->deltaSyncQuery()->get();
+        return $this->syncQuery()->get();
     }
 
     public function deltaSync($lastSyncId): Collection
     {
-        return $this->deltaSyncQuery()->get();
+        return $this->syncQuery()->get();
     }
 }
