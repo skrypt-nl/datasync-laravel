@@ -5,43 +5,18 @@ namespace Skrypt\DeltaSync\Controllers;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
-use Illuminate\Support\Collection;
-use Skrypt\DeltaSync\Models\ModelEvent;
-use Skrypt\DeltaSync\Traits\HasDeltaSync;
+use Skrypt\DeltaSync\Services\DeltaSyncService;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class DeltaSyncController extends Controller
 {
     private int $syncId;
+    private DeltaSyncService $deltaSyncService;
 
     public function __construct()
     {
-        $this->syncId = $this->getSyncId();
-    }
-
-    private function getSyncId(): int
-    {
-        return ModelEvent::max('id') ?? 0;
-    }
-
-    private function response(Collection $data): StreamedResponse
-    {
-        $response = new StreamedResponse();
-        $syncId = $this->syncId;
-
-        $response->setCallback(function () use ($data, $syncId) {
-            $data->chunk(200)->each(function ($chunk) use ($syncId) {
-                echo json_encode([
-                        "data" => $chunk,
-                        "lastSyncId" => $syncId
-                    ]) . "\n";
-            });
-        });
-
-        $response->headers->set('Content-Type', 'application/json');
-        $response->setStatusCode(200);
-
-        return $response;
+        $this->deltaSyncService = new DeltaSyncService();
+        $this->syncId = $this->deltaSyncService->getSyncId();
     }
 
     /**
@@ -51,18 +26,9 @@ class DeltaSyncController extends Controller
      */
     public function full(): StreamedResponse | JsonResponse
     {
-        $models = $this->getDeltaSyncModels();
+        $data = $this->deltaSyncService->getFullSyncData();
 
-        $data = [];
-
-        foreach ($models as $model => $modelClass) {
-            if (in_array(HasDeltaSync::class, class_uses_recursive($modelClass))) {
-                $syncStrategy = $modelClass->getDeltaSyncStrategy();
-                $data[$model] = $syncStrategy->fullSync();
-            }
-        }
-
-        return $this->response(collect($data));
+        return $this->deltaSyncService->prepareStreamedResponse(collect($data), $this->syncId);
     }
 
     /**
@@ -73,36 +39,14 @@ class DeltaSyncController extends Controller
      */
     public function delta(Request $request): StreamedResponse | JsonResponse
     {
-        $models = $this->getDeltaSyncModels();
         $lastSyncId = $request->query('lastSyncId');
 
         if (!is_numeric($lastSyncId)) {
             return response()->json(['message' => 'Missing or invalid lastSyncId.'], 422);
         }
 
-        $data = [];
+        $data = $this->deltaSyncService->getDeltaSyncData($lastSyncId);
 
-        foreach ($models as $model => $modelClass) {
-            if (in_array(HasDeltaSync::class, class_uses_recursive($modelClass))) {
-                $syncStrategy = $modelClass->getDeltaSyncStrategy();
-                $data[$model] = $syncStrategy->deltaSync($lastSyncId);;
-            }
-        }
-
-        return $this->response(collect($data));
-    }
-
-    /**
-     * Get the list of models specified in the deltasync config file as model instances.
-     *
-     * @return Collection
-     */
-    protected function getDeltaSyncModels(): Collection
-    {
-        $models = config('deltasync.models');
-
-        return collect($models)->map(function ($model) {
-            return app($model);
-        });
+        return $this->deltaSyncService->prepareStreamedResponse(collect($data), $this->syncId);
     }
 }

@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 class ModelUpdate extends Model
 {
     public $timestamps = false;
+    protected $visible = ['key'];
 
     protected $fillable = [
         'key',

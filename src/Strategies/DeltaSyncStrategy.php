@@ -35,12 +35,10 @@ class DeltaSyncStrategy implements DeltaSyncInterface
         $subQuery = str_replace('select *', 'select id', $this->syncQuery()->toSql());
         $bindings = $this->syncQuery()->getBindings();
 
-        $modelEvents = ModelEvent::where('model_name', $deltaSyncModelName)
+        return ModelEvent::where('model_name', $deltaSyncModelName)
             ->with(['model', 'updates'])
             ->where('id', '>', $lastSyncId)
             ->whereRaw("`model_id` IN ($subQuery)", $bindings)
             ->get();
-
-        return $modelEvents;
     }
 }

@@ -34,6 +34,6 @@ class ModelEvent extends Model
      */
     public function updates(): HasMany
     {
-        return $this->hasMany(ModelUpdate::class)->select('id', 'value', 'key');
+        return $this->hasMany(ModelUpdate::class, 'model_event_id', 'id');
     }
 }

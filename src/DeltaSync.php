@@ -19,8 +19,4 @@ class DeltaSync extends ServiceProvider
             ], 'migrations');
         }
     }
-
-    public function register()
-    {
-    }
 }
